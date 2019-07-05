@@ -1,0 +1,61 @@
+<% if flash[:error] %>
+  <div class="alert alert-danger">
+    <%= flash[:error] %>
+  </div>
+<% end %>
+<% if flash[:success] %>
+  <div class="alert alert-success">
+    <%= flash[:success] %>
+  </div>
+<% end %>
+<h2>Hi! <%= current_user.name %></h2>
+<h4>Your balance</h4>
+<h2>$<%= number_with_precision(current_user.account.balance, precision: 2) %></h2>
+
+<h4>Transactions</h4>
+<% if current_user.account.transactions.any? %>
+  <% current_user.account.transactions.each do |transaction| %>
+    <% if transaction.sender_id == current_user.account.id %>
+      <div class="alert alert-danger">
+        $-<%= number_with_precision(transaction.amount, precision: 2) %> /
+        <%= transaction.receiver.user.name %> /
+        <%= transaction.created_at.strftime("%H:%M - %b %d") %>
+      </div>
+    <% else %>
+      <div class="alert alert-success">
+        $<%= number_with_precision(transaction.amount, precision: 2) %> /
+        <%= transaction.sender.user.name %> /
+        <%= transaction.created_at.strftime("%H:%M - %b %d") %>
+      </div>
+    <% end %>
+  <% end %>
+<% else %>
+  <p>No transactions</p>
+<% end %>
+
+<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">New transaction</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <%= form_for @transaction, url: transactions_path do |transaction| %>
+        <div class="modal-body">
+          <div class="form-group">
+            <%= transaction.text_field :amount, autofocus: true, class: "form-control", placeholder: "Amount" %>
+          </div>
+          <div class="form-group">
+            <%= transaction.select :receiver_id, options_for_select(@accounts.collect {|account| [ "#{account.user.name} - nº #{account.number}", account.id ] }), {include_blank: "To"}, {class: "custom-select"}%>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <%= button_tag 'Confirm', class: "btn btn-primary" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
